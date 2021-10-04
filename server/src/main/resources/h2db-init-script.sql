@@ -29,8 +29,8 @@ INSERT INTO role (name) VALUES
   ('ROLE_DEVICE');
 
 INSERT INTO user (username, password, whitelistisactivated) VALUES
-  ('admin', '$2a$10$FHsa61eu6/OwjX3WyKP.0.y7b8wS2PW/.jrOcflgFqflq.5SVXDZ6', false), /* password: password */
-  ('infineon', '$2a$10$FHsa61eu6/OwjX3WyKP.0.y7b8wS2PW/.jrOcflgFqflq.5SVXDZ6', false); /* password: password */
+  ('admin', '$2a$10$XhD5CAjcl5CqQ3oWYBtMQ.IhhGBUVWvC4ZrYZqdpb9r2D9d8NVHLW', false), /* password: nimda */
+  ('infineon', '$2a$10$gFGZR4PbZrNg1jqNsb1XT.eUZXyaVxUkzlmCRZcS2swjBmdyXxtva', false); /* password: noenifni */
 
 INSERT INTO user_roles (users_id, roles_id) VALUES
   ('1', '1'),
