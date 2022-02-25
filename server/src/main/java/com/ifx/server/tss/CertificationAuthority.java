@@ -32,102 +32,122 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.Optional;
 
-@Component
+/**
+ * - First, the hardcoded issuer certificates will be considered. If there are no matching certs,
+ *   the service will attempt to download issuer certificates from trusted sites.
+ *   However, this approach is vulnerable to DNS spoofing or DNS cache poisoning attacks
+ * - CRL is not checked.
+ */
+@Service
 public class CertificationAuthority {
 
     private final int CERT_CHAIN_DEPTH_MAX = 5;
+    private final String[] TRUSTED_CA_SITES = {"pki.infineon.com"};
+    HashMap<String, X509Certificate> CAs;
 
-    @Value("classpath:certificates/Infineon-TPM_RSA_Root_CA-C-v01_00-EN.cer")
-    private Resource resourceCACrtRootRsa;
-    @Autowired
-    private CaCerts rootCA;
-    private HashMap<String, X509Certificate>  issuers;
+    @Value("classpath:certificates/*.crt")
+    private Resource[] resourceOptigaRootCACert;
+
+    private CaCerts displayCA;
 
     public CertificationAuthority() {
-        issuers = new HashMap<String, X509Certificate>();
+        CAs = new HashMap<>();
+        displayCA = new CaCerts();
     }
 
+    /**
+     * This is for dashboard display only. There are multiple valid root certs,
+     * so we randomly pick one.
+     */
     @PostConstruct
-    public void initCACert() {
+    private void CertificationAuthority() throws Exception {
         try {
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-            X509Certificate ca = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(resourceCACrtRootRsa.getInputStream().readAllBytes()));
-            ca.checkValidity();
-            rootCA.setRootCACert(ca);
+            for (Resource resource:resourceOptigaRootCACert) {
+                CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+                X509Certificate rootCa = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(resource.getInputStream().readAllBytes()));
+                verifyAndStoreRootCACert(rootCa);
+            }
 
-            if (Utils.verifySignature(rootCA.getRootCACert(), rootCA.getRootCACert()))
-                rootCA.setRootCAIsValid("Passed");
-            else
-                rootCA.setRootCAIsValid("Failed");
-
-            rootCA.setRootCATextOut(printCertificate(rootCA.getRootCACert()));
-
-            issuers.put(ca.getSubjectDN().getName(), ca);
-
+            Optional<String> firstKey = CAs.keySet().stream().findFirst();
+            if (firstKey.isPresent()) {
+                X509Certificate cert = CAs.get(firstKey.get());
+                displayCA.setRootCACert(cert);
+                displayCA.setRootCAIsValid("Passed");
+                displayCA.setRootCATextOut(printCert(cert));
+            }
         } catch (Exception e) {
+            throw new Exception(e.getMessage());
         }
     }
 
-    static public String printCertificate(X509Certificate c) {
-        String out = "";
-        try {
-            out += "Version: V" + Integer.toString(c.getVersion()) + ", ";
-            out += "Format: " + c.getType() + "\n";
-            out += "Subject: " + c.getSubjectDN().toString() + "\n";
-            out += "Issuer: "+ c.getIssuerDN().toString() + "\n";
-            out += "Validity: [From: " + c.getNotBefore().toString() +
-                    ", To: " + c.getNotAfter().toString() + "]\n";
-            out += "Signature Algorithm: "+ c.getSigAlgName() + "\n";
-            out += "Public Key: "+ c.getPublicKey().toString() + "\n";
-            out += "Signature: "+ Hex.toHexString(c.getSignature()) + "\n";
-        } catch (Exception e) {
-        }
-        return out;
+    public CaCerts getDisplayCA() {
+        return displayCA;
     }
 
-    public void verify(X509Certificate toVerify) throws Exception {
+    public void verify(X509Certificate toe) throws Exception {
         try {
-            HashMap<String, X509Certificate> tmp = new HashMap<String, X509Certificate>();
             X509Certificate issuer;
-            X509Certificate toe = toVerify;
             int depth = CERT_CHAIN_DEPTH_MAX;
 
             do {
                 if (depth-- < 0)
-                    throw new Exception("Certificate chain is too long.");
+                    throw new Exception("Certificate chain is longer than acceptable length of " + CERT_CHAIN_DEPTH_MAX);
 
-                String toeDN = toe.getSubjectDN().getName();
-                String issuerDN = toe.getIssuerDN().getName();
-                if (toeDN.equals(issuerDN)) { // self-sign
-                    X509Certificate rootCrt = rootCA.getRootCACert();
-                    toe.verify(rootCrt.getPublicKey());
+                String toeDN = toe.getSubjectX500Principal().getName();
+                String issuerDN = toe.getIssuerX500Principal().getName();
+
+                /* check if we reached the root of the certificate chain */
+                if (toeDN.equals(issuerDN)) {
+                    issuer = CAs.get(issuerDN);
                     toe.checkValidity();
-                    issuers.putAll(tmp);
-                    // Reached the root of certificate chain
+                    toe.verify(issuer.getPublicKey());
                     break;
                 }
 
-                issuer = issuers.get(issuerDN);
+                /* do we know the issuer? */
+                issuer = CAs.get(issuerDN);
+
+                /* try to download the issuer certificate */
                 if (issuer == null) {
-                    String link = getUrl(toe);
+                    int i = 0;
+                    String link = getIssuerUrl(toe);
+
+                    if (link == null)
+                        throw new Exception("Unable to retrieve uri from Authority Information Access field.");
+
+                    for (i = 0; i < TRUSTED_CA_SITES.length; i++) {
+                        if (link.startsWith("http://" + TRUSTED_CA_SITES[i]))
+                            break;
+                        if (link.startsWith("https://" + TRUSTED_CA_SITES[i]))
+                            break;
+                    }
+
+                    if (i >= TRUSTED_CA_SITES.length)
+                        throw new Exception("URI to download issuer's certificate is not trusted.");
+
                     URL url = new URL(link);
                     CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
                     issuer = (X509Certificate) certFactory.generateCertificate(url.openStream());
-                    if (!issuer.getSubjectDN().getName().equals(issuerDN))
+                    if (!issuer.getSubjectX500Principal().getName().equals(issuerDN))
                         throw new Exception("CA server returns bad certificate.");
-                    tmp.put(issuer.getSubjectDN().getName(), issuer);
+
+                    verifyAndStoreIssuerCert(true, toe, issuer);
+                } else {
+                    verifyAndStoreIssuerCert(false, toe, issuer);
                 }
 
-                toe.verify(issuer.getPublicKey());
-                toe.checkValidity();
                 toe = issuer;
             } while(true);
         } catch (Exception e) {
@@ -136,7 +156,7 @@ public class CertificationAuthority {
         }
     }
 
-    private static String getUrl(X509Certificate certificate) throws Exception {
+    private static String getIssuerUrl(X509Certificate certificate) throws Exception {
 
         byte[] bytes = certificate.getExtensionValue(Extension.authorityInfoAccess.getId());
 
@@ -161,4 +181,58 @@ public class CertificationAuthority {
         return null;
     }
 
+    static public String printCert(X509Certificate cert) {
+        String out = "";
+
+        try {
+            out += "Version: V" + cert.getVersion() + ", ";
+            out += "Format: " + cert.getType() + "\n";
+
+            try {
+                MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+                out += "Thumbprint: " + Hex.toHexString(messageDigest.digest(cert.getEncoded())) + "\n";
+            } catch (NoSuchAlgorithmException e) {
+            }
+
+            out += "Serial Number: " + cert.getSerialNumber().toString(16) + "\n";
+            out += "Subject: " + cert.getSubjectX500Principal().toString() + "\n";
+            out += "Issuer: "+ cert.getIssuerX500Principal().toString() + "\n";
+            out += "Validity: [From: " + cert.getNotBefore().toString() +
+                    ", To: " + cert.getNotAfter().toString() + "]\n";
+            out += "Signature Algorithm: "+ cert.getSigAlgName() + "\n";
+            out += "Public Key: "+ cert.getPublicKey().toString() + "\n";
+            out += "Signature: "+ Hex.toHexString(cert.getSignature()) + "\n";
+        } catch (Exception e) {
+        }
+        return out;
+    }
+
+    /**
+     * Verify root CA self-signed certificate and remember the cert
+     * @param rootCa
+     * @return
+     */
+    private void verifyAndStoreRootCACert(X509Certificate rootCa) throws Exception {
+        if (!rootCa.getIssuerX500Principal().equals(rootCa.getSubjectX500Principal()))
+            throw new Exception("root CA cert is not a self-signed cert");
+        rootCa.checkValidity();
+        rootCa.verify(rootCa.getPublicKey());
+        CAs.put(rootCa.getIssuerX500Principal().getName(), rootCa);
+    }
+
+    /**
+     * Verify child & issuer certificate and remember the issuer certificate
+     * @param childCert
+     * @param issuerCert
+     * @throws Exception
+     */
+    private void verifyAndStoreIssuerCert(boolean toStore, X509Certificate childCert, X509Certificate issuerCert) throws Exception {
+        if (!childCert.getIssuerX500Principal().equals(issuerCert.getSubjectX500Principal()))
+            throw new Exception("certificate issuer mismatch");
+        childCert.checkValidity();
+        issuerCert.checkValidity();
+        childCert.verify(issuerCert.getPublicKey());
+        if (toStore)
+            CAs.put(issuerCert.getSubjectX500Principal().getName(), issuerCert);
+    }
 }
