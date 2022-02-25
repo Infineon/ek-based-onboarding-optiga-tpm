@@ -67,10 +67,6 @@ public class CertificationAuthority {
         displayCA = new CaCerts();
     }
 
-    /**
-     * This is for dashboard display only. There are multiple valid root certs,
-     * so we randomly pick one.
-     */
     @PostConstruct
     private void CertificationAuthority() throws Exception {
         try {
@@ -80,6 +76,10 @@ public class CertificationAuthority {
                 verifyAndStoreRootCACert(rootCa);
             }
 
+            /**
+             * This is for dashboard display only. There are multiple valid root certs,
+             * so we randomly pick one.
+             */
             Optional<String> firstKey = CAs.keySet().stream().findFirst();
             if (firstKey.isPresent()) {
                 X509Certificate cert = CAs.get(firstKey.get());
