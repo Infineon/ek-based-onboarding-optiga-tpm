@@ -1,5 +1,5 @@
 # Introduction
-This document explains how an OPTIGA™ TPM SLx 9670 TPM2.0 can be used on a Raspberry Pi® to perform the Endorsement Key (EK) based device onboarding.
+This document explains how an OPTIGA™ TPM SLx 967x TPM2.0 can be used on a Raspberry Pi® to perform the Endorsement Key (EK) based device onboarding.
 
 The Endorsement Key (EK) based device onboarding is a mechanism to register a device on a cloud service using EK as device identity without the need to provision TPM with additional key or certificate. Moreover, it is possible to perform secure transfer of secret keys (HMAC/RSA/ECC) from a server to a device’s TPM. Depending on the application, these keys can be used for different purposes, e.g., second layer data encryption/decryption.
 
@@ -7,8 +7,11 @@ The Endorsement Key (EK) based device onboarding is a mechanism to register a de
 
 Hardware prerequisites:
 - [Raspberry Pi® 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)
-- [IRIDIUM9670 TPM2.0](https://www.infineon.com/cms/en/product/evaluation-boards/iridium9670-tpm2.0-linux/)\
-  <img src="https://github.com/Infineon/ek-based-onboarding-optiga-tpm/raw/master/media/IRIDIUM9670-TPM2.png" width="30%">
+- Use either of the following TPM2.0 boards:
+  - [IRIDIUM9670 TPM2.0](https://www.infineon.com/cms/en/product/evaluation-boards/iridium9670-tpm2.0-linux/)\
+    <img src="https://github.com/Infineon/ek-based-onboarding-optiga-tpm/raw/master/media/IRIDIUM9670-TPM2.png" width="30%">
+  - [OPTIGA™ TPM SLB 9672 RPI evaluation board](https://www.infineon.com/cms/en/product/evaluation-boards/optiga-tpm-9672-rpi-eval/)\
+    <img src="https://github.com/Infineon/ek-based-onboarding-optiga-tpm/raw/master/media/SLB9672-EVA-BOARD.png" width="40%">
 
 # Getting Started
 
