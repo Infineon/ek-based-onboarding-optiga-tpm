@@ -1,0 +1,17 @@
+.git
+challenge
+*.key
+did.*
+ecc.*
+hmac.*
+rsa.*
+ek.*
+*.json
+*.token
+parent.*
+*.hex
+*.txt
+*.3gp
+*.jwt
+*.csv
+
