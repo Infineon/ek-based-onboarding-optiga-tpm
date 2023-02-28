@@ -317,8 +317,7 @@ public class CoreService {
 
             String pk = whitelist.getPk();
             // Sanity check
-            if (pk == null || pk == "" ||
-                    (pk.length() != 512 && pk.length() != 64))
+            if (pk.isBlank() || (pk.length() != 512 && pk.length() != 64))
                 throw new Exception("Invalid public key");
 
             whitelistRepository.deleteAllByPk(pk);
@@ -341,25 +340,23 @@ public class CoreService {
                     "\n=========================================\n" +
                     "Server received onboarding request\n" +
                     "=========================================\n");
-            // Process EK cert
-            String eKPubKey = null;
-            String pubKey = null;
-            if (onBoard.getEkCrt() != null && onBoard.getEkCrt() != "") {
-                byte[] crt_der = Hex.decode(onBoard.getEkCrt());
-                CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-                ByteArrayInputStream bytes = new ByteArrayInputStream(crt_der);
-                X509Certificate eKCert = (X509Certificate) certFactory.generateCertificate(bytes);
-                RSAPublicKey key = (RSAPublicKey)eKCert.getPublicKey();
-                caManager.verify(eKCert);
-                // Read EK pubkey from cert
-                eKPubKey = Utils.encodeEkPubKey(key);
-                pubKey = Utils.getPubKey(key);
-                log(username, "EK certificate chain verified ok. Read EK public key from certificate: " + eKPubKey + "\n");
-            } else if (onBoard.getEkPub() != null && onBoard.getEkPub() != "") {
-                /* Cater for simulated TPM, no EK cert is available for verification */
-                eKPubKey = onBoard.getEkPub();
-                log(username, "EK certificate chain not available.\nReceived EK public key instead: " + eKPubKey + "\n");
+
+            if (onBoard.getEkCrt().isBlank()) {
+                throw new Exception("EK certificate not found");
             }
+
+            // Process EK cert
+            byte[] crt_der = Hex.decode(onBoard.getEkCrt());
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            ByteArrayInputStream bytes = new ByteArrayInputStream(crt_der);
+            X509Certificate eKCert = (X509Certificate) certFactory.generateCertificate(bytes);
+            RSAPublicKey key = (RSAPublicKey)eKCert.getPublicKey();
+            caManager.verify(eKCert);
+
+            // Read EK pubkey from cert
+            String eKPubKey = Utils.encodeEkPubKey(key);
+            String pubKey = Utils.getPubKey(key);
+            log(username, "EK certificate chain verified ok. Read EK public key from certificate: " + eKPubKey + "\n");
 
             // Check device is whitelisted
             User user = userRepository.findByUsername(username);
@@ -528,7 +525,7 @@ public class CoreService {
             }
 
             String challenge = device.getChallenge();
-            if (challenge == "" || challenge == null)
+            if (challenge.isBlank())
                 throw new Exception("unable to retrieve challenge");
 
             // Verify HMAC
@@ -684,7 +681,7 @@ public class CoreService {
                         "=========================================\n");
 
             String fileName = download.getName();
-            if (fileName == null || fileName == "" ) {
+            if (fileName.isBlank()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
 
