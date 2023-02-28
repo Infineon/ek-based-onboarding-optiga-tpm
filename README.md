@@ -17,7 +17,7 @@ This project explains how to use an OPTIGA™ TPM 2.0 on a Raspberry Pi to perfo
 
 There are two options for TPM usage: using an actual TPM or a simulated TPM.
 
-Option 1: To use an actual TPM, you will need the following hardware:
+<ins>Option 1:</ins><br>To use an actual TPM, you will need the following hardware:
 - You can use either of the following TPM2.0 boards:
     - [IRIDIUM9670 TPM2.0 board](https://www.infineon.com/cms/en/product/evaluation-boards/iridium9670-tpm2.0-linux/)\
       <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/IRIDIUM9670-TPM2.png" width="15%">
@@ -27,7 +27,7 @@ Option 1: To use an actual TPM, you will need the following hardware:
   <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/raspberry-with-slb9670.png" width="30%">
   <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/raspberry-with-slb9672.png" width="30%">
 
-Option 2: For a simulated TPM, you can use any host machine with one of the following Linux distributions installed: Debian (Bullseye, Buster), Ubuntu (18.04, 20.04).
+<ins>Option 2:</ins><br>For a simulated TPM, you can use any host machine with one of the following Linux distributions installed: Debian (Bullseye, Buster), Ubuntu (18.04, 20.04).
 
 # Project Overview
 
@@ -141,7 +141,7 @@ $ sudo ldconfig
 ```
 
 Download the project:
-```all
+```
 $ git clone https://github.com/wxleong/ek-based-onboarding-optiga-tpm ~/ek-based-onboarding-optiga-tpm
 ```
 
@@ -200,7 +200,7 @@ Build and start the server:
 $ cd ~/ek-based-onboarding-optiga-tpm/server
 $ mvn package
 $ mvn spring-boot:run &
-$ sleep 10
+$ sleep 20
 ```
 
 The server is ready for operation once you see the following message:
@@ -246,20 +246,26 @@ Screenshots:
 
 ## Device
 
-Set the TCTI interface depending on your choice of TPM:
-- Hardware TPM
+Depending on your choice of TPM:
+- <ins>Hardware TPM</ins><br>
+  Set the TCTI interface:
   ```
   $ export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
   ```
-- Simulated TPM
+  Grant access permissions to the TPM device nodes:
   ```
+  $ cd ~/ek-based-onboarding-optiga-tpm/device
+  $ ./0_prep.sh
+  ```
+- <ins>Simulated TPM</ins><br>
+  Set the TCTI interface:
+  ```all
   $ export TPM2TOOLS_TCTI="tabrmd:bus_name=com.intel.tss2.Tabrmd,bus_type=session"
   ```
 
 Once the server is up and running, execute the following scripts:
 ```all
 $ cd ~/ek-based-onboarding-optiga-tpm/device
-$ ./0_prep.sh
 $ ./1_clean.sh
 $ ./2_tpm-clear-init.sh
 $ ./3_onboard-req.sh
