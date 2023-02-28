@@ -40,9 +40,6 @@
 
     <dependencies>
 
-        <!-- ////////////////////////
-            Tomcat
-        ///////////////////////// -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -52,16 +49,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <!-- monitoring service localhost:xxxx/actuator/... -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!-- //////////////////// -->
 
-        <!-- ////////////////////////
-            Spring Security
-        ///////////////////////// -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -71,32 +65,19 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- //////////////////// -->
 
-        <!-- ////////////////////////
-             Webpage with thymeleaf instead of jsp
-         ///////////////////////// -->
-        <!-- resources/templates/*.html -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
-        <!-- //////////////////// -->
 
-        <!-- ////////////////////////
-            Lombok
-        ///////////////////////// -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.10</version>
             <scope>provided</scope>
         </dependency>
-        <!-- //////////////////// -->
 
-        <!-- ////////////////////////
-            In-memory database
-        ///////////////////////// -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -107,11 +88,7 @@
             <artifactId>h2</artifactId>
             <version>1.4.200</version>
         </dependency>
-        <!-- //////////////////// -->
 
-        <!-- ////////////////////////
-                   WebSocket (Version > 5.2.2 has issue)
-        ///////////////////////// -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-websocket</artifactId>
@@ -127,19 +104,12 @@
             <artifactId>spring-security-messaging</artifactId>
         </dependency>
 
-        <!-- ////////////////////////
-           TPM2.0 TSS
-           https://github.com/Microsoft/TSS.MSR/
-        ///////////////////////// -->
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>TSS.Java</artifactId>
             <version>0.9.1</version>
         </dependency>
 
-        <!-- ////////////////////////
-           webjars
-        ///////////////////////// -->
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>webjars-locator-core</artifactId>
@@ -160,27 +130,18 @@
             <version>2.3.3</version>
         </dependency>
 
-        <!-- ////////////////////////
-           Auth0 library for JWT
-        ///////////////////////// -->
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>3.10.3</version>
         </dependency>
 
-        <!-- ////////////////////////
-           Gson
-        ///////////////////////// -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.8.6</version>
         </dependency>
 
-        <!-- ////////////////////////
-           Bouncycastle
-        ///////////////////////// -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
@@ -202,47 +163,6 @@
                     <source>9</source>
                     <target>9</target>
                 </configuration>
-            </plugin>
-            <!-- ////////////////////////
-               minify js & css
-               trigger by mvn command only, not intellij
-            ///////////////////////// -->
-            <plugin>
-                <groupId>com.samaxes.maven</groupId>
-                <artifactId>minify-maven-plugin</artifactId>
-                <version>1.7.6</version>
-                <executions>
-                    <execution>
-                        <id>default-minify</id>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <charset>UTF-8</charset>
-                            <webappSourceDir>${basedir}/src/main/resources/static</webappSourceDir>
-                            <jsSourceDir>js</jsSourceDir>
-                            <jsSourceFiles>
-                                <jsSourceFile>util.js</jsSourceFile>
-                                <jsSourceFile>core-home.js</jsSourceFile>
-                                <jsSourceFile>core-entry.js</jsSourceFile>
-                                <jsSourceFile>core-dashboard.js</jsSourceFile>
-                            </jsSourceFiles>
-                            <cssSourceDir>css</cssSourceDir>
-                            <cssSourceFiles>
-                                <cssSourceFile>style-home.css</cssSourceFile>
-                                <cssSourceFile>style-entry.css</cssSourceFile>
-                                <cssSourceFile>style-dashboard.css</cssSourceFile>
-                            </cssSourceFiles>
-                            <webappTargetDir>${project.build.outputDirectory}/static</webappTargetDir>
-                            <!--<jsFinalFile>util.min.js</jsFinalFile>-->
-                            <jsEngine>CLOSURE</jsEngine>
-                            <skipMerge>true</skipMerge>
-                            <nosuffix>true</nosuffix>
-                            <verbose>true</verbose>
-                        </configuration>
-                        <goals>
-                            <goal>minify</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
