@@ -171,10 +171,10 @@ $ swtpm socket --tpm2 --flags not-need-init --tpmstate dir=/tmp/emulated_tpm --s
 $ sleep 5
 ```
 
-Copy the swtpm CA certificates to the server source:
+Copy swtpm CA certificates to the server source:
 ```all
-$ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/swtpm-localca-rootca-cert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/certificates/swtpm-localca-rootca-cert.crt
-$ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/issuercert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/certificates/issuercert.crt
+$ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/swtpm-localca-rootca-cert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/rootCAs/swtpm-localca-rootca-cert.crt
+$ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/issuercert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/intermediateCAs/issuercert.crt
 ```
 
 Start a session dbus which is limited to the current login session:

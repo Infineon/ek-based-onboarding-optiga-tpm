@@ -28,10 +28,8 @@ import com.ifx.server.model.stateful.CaCerts;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -57,8 +55,11 @@ public class CertificationAuthority {
     private final String[] TRUSTED_CA_SITES = {"pki.infineon.com"};
     HashMap<String, X509Certificate> CAs;
 
-    @Value("classpath:certificates/*.crt")
-    private Resource[] resourceOptigaRootCACert;
+    @Value("classpath:rootCAs/*.crt")
+    private Resource[] resourceRootCACert;
+
+    @Value("classpath:intermediateCAs/*.crt")
+    private Resource[] resourceIntermediateCACert;
 
     private CaCerts displayCA;
 
@@ -70,10 +71,18 @@ public class CertificationAuthority {
     @PostConstruct
     private void CertificationAuthority() throws Exception {
         try {
-            for (Resource resource:resourceOptigaRootCACert) {
+            for (Resource resource: resourceRootCACert) {
                 CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
                 X509Certificate rootCa = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(resource.getInputStream().readAllBytes()));
                 verifyAndStoreRootCACert(rootCa);
+            }
+
+            if (resourceIntermediateCACert.length > 0) {
+                for (Resource resource : resourceIntermediateCACert) {
+                    CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+                    X509Certificate intermediateCa = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(resource.getInputStream().readAllBytes()));
+                    verifyAndStoreIntermediateCACert(intermediateCa);
+                }
             }
 
             /**
@@ -218,6 +227,17 @@ public class CertificationAuthority {
         rootCa.checkValidity();
         rootCa.verify(rootCa.getPublicKey());
         CAs.put(rootCa.getIssuerX500Principal().getName(), rootCa);
+    }
+
+    /**
+     * Verify intermediate CA certificate and remember the cert.
+     * For the moment, only one level of intermediate CA certificate is supported.
+     * @param intermediateCA
+     * @return
+     */
+    private void verifyAndStoreIntermediateCACert(X509Certificate intermediateCA) throws Exception {
+        verify(intermediateCA);
+        CAs.put(intermediateCA.getSubjectX500Principal().getName(), intermediateCA);
     }
 
     /**
