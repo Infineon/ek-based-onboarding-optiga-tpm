@@ -8,6 +8,7 @@ This project explains how to use an OPTIGA™ TPM 2.0 on a Raspberry Pi to perfo
 - **[Preparing Raspberry Pi for First Use](#preparing-raspberry-pi-for-first-use)**
 - **[Installing Software for First Use](#installing-software-for-first-use)**
 - **[Operation Guide](#operation-guide)**
+    - **[TPM Simulator](#tpm-simulator)**
     - **[Server](#server)**
     - **[Device](#device)**
 - **[License](#license)**
@@ -40,6 +41,8 @@ The purpose of this project is to demonstrate the following flow:
 
 # Preparing Raspberry Pi for First Use
 
+Skip this section if you do not plan to use Raspberry Pi.
+
 This section outlines the steps required to prepare an SD card image that can be used to boot a Raspberry Pi.
 
 To begin, flash the Raspberry Pi OS image [2021-01-11 release](https://downloads.raspberrypi.org/raspios_armhf/images/raspios_armhf-2021-01-12/2021-01-11-raspios-buster-armhf.zip) onto a micro-SD card that is at least 8GB in size.
@@ -65,7 +68,7 @@ $ sudo apt update
 
 Install generic packages:
 ```all
-$ sudo apt -y install xxd jq maven openjdk-11-jre autoconf-archive libcmocka0 libcmocka-dev procps iproute2 build-essential git pkg-config gcc libtool automake libssl-dev uthash-dev autoconf doxygen libjson-c-dev libini-config-dev libcurl4-openssl-dev uuid-dev pandoc acl libglib2.0-dev xxd
+$ sudo apt -y install xxd jq maven openjdk-11-jre autoconf-archive libcmocka0 libcmocka-dev procps iproute2 build-essential git pkg-config gcc libtool automake libssl-dev uthash-dev autoconf doxygen libjson-c-dev libini-config-dev libcurl4-openssl-dev uuid-dev pandoc acl libglib2.0-dev xxd curl
 ```
 
 Install platform dependent packages on Ubuntu (18.04, 20.04):
@@ -101,18 +104,20 @@ $ sudo make install
 $ sudo ldconfig
 ```
 
-Install Microsoft TPM2.0 simulator on Debian (Bullseye, Buster), Ubuntu (18.04, 20.04):
-```debian-bullseye,debian-buster,ubuntu-18.04,ubuntu-20.04
-$ git clone https://github.com/microsoft/ms-tpm-20-ref ~/ms-tpm-20-ref
-$ cd ~/ms-tpm-20-ref/TPMCmd
+Install tpm2-abrmd:
+```all
+$ git clone https://github.com/tpm2-software/tpm2-abrmd ~/tpm2-abrmd
+$ cd ~/tpm2-abrmd
+$ git checkout 2.4.1
 $ ./bootstrap
 $ ./configure
 $ make -j$(nproc)
 $ sudo make install
+$ sudo ldconfig
 ```
 
 Install libtpms-based TPM emulator on Ubuntu-22.04:
-```ubuntu-22.04
+```all
 # Install dependencies
 $ sudo apt-get install -y dh-autoreconf libtasn1-6-dev net-tools libgnutls28-dev expect gawk socat libfuse-dev libseccomp-dev make libjson-glib-dev gnutls-bin
 
@@ -135,20 +140,61 @@ $ sudo make install
 $ sudo ldconfig
 ```
 
-Download and build the project:
+Download the project:
 ```all
 $ git clone https://github.com/wxleong/ek-based-onboarding-optiga-tpm ~/ek-based-onboarding-optiga-tpm
-$ cd ~/ek-based-onboarding-optiga-tpm/server
-$ mvn package
 ```
 
 # Operation Guide
 
+## TPM Simulator
+
+If you don't plan to use TPM simulator, you may skip this section.
+
+Start Libtpms-based TPM emulator:
+```all
+$ mkdir /tmp/emulated_tpm
+
+# Create configuration files for swtpm_setup:
+# - ~/.config/swtpm_setup.conf
+# - ~/.config/swtpm-localca.conf
+#   This file specifies the location of the CA keys and certificates:
+#   - ~/.config/var/lib/swtpm-localca/*.pem
+# - ~/.config/swtpm-localca.options
+$ swtpm_setup --tpm2 --create-config-files overwrite,root
+
+# Initialize the swtpm
+$ swtpm_setup --tpm2 --config ~/.config/swtpm_setup.conf --tpm-state /tmp/emulated_tpm --overwrite --create-ek-cert --create-platform-cert --write-ek-cert-files /tmp/emulated_tpm
+
+# Launch the swtpm
+$ swtpm socket --tpm2 --flags not-need-init --tpmstate dir=/tmp/emulated_tpm --server type=tcp,port=2321 --ctrl type=tcp,port=2322 &   <--- to debug, add "--log level=?"
+$ sleep 5
+```
+
+Copy the swtpm CA certificates to the server source:
+```all
+$ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/swtpm-localca-rootca-cert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/certificates/swtpm-localca-rootca-cert.crt
+$ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/issuercert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/certificates/issuercert.crt
+```
+
+Start a session dbus which is limited to the current login session:
+```all
+$ sudo apt install -y dbus
+$ export DBUS_SESSION_BUS_ADDRESS=`dbus-daemon --session --print-address --fork`
+```
+
+Start TPM resource manager:
+```all
+$ tpm2-abrmd --allow-root --session --tcti=swtpm:host=127.0.0.1,port=2321 &
+$ sleep 5
+```
+
 ## Server
 
-Start the server on Raspberry Pi:
+Build and start the server:
 ```all
 $ cd ~/ek-based-onboarding-optiga-tpm/server
+$ mvn package
 $ mvn spring-boot:run &
 $ sleep 10
 ```
@@ -195,6 +241,16 @@ Screenshots:
 </table>
 
 ## Device
+
+Set the TCTI interface depending on your choice of TPM:
+- Hardware TPM
+  ```
+  $ export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
+  ```
+- Simulated TPM
+  ```
+  $ export TPM2TOOLS_TCTI="tabrmd:bus_name=com.intel.tss2.Tabrmd,bus_type=session"
+  ```
 
 Once the server is up and running, execute the following scripts:
 ```all
