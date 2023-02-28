@@ -173,7 +173,11 @@ $ sleep 5
 
 Copy swtpm CA certificates to the server source:
 ```all
+# Root CA
 $ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/swtpm-localca-rootca-cert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/rootCAs/swtpm-localca-rootca-cert.crt
+
+# Intermediate CA
+$ mkdir ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/intermediateCAs
 $ openssl x509 -outform der -in ~/.config/var/lib/swtpm-localca/issuercert.pem -out ~/ek-based-onboarding-optiga-tpm/server/src/main/resources/intermediateCAs/issuercert.crt
 ```
 
