@@ -1,3 +1,5 @@
+[![Github actions](https://github.com/infineon/ek-based-onboarding-optiga-tpm/actions/workflows/main.yml/badge.svg)](https://github.com/wxleong/secora-blockchain-walletconnect/actions)
+
 # Introduction
 This project explains how to use an OPTIGA™ TPM 2.0 on a Raspberry Pi to perform Endorsement Key (EK)-based device onboarding to a private cloud. EK-based device onboarding is a mechanism for registering a device on a cloud service using EK as the device identity, without the need to provision the TPM with an additional key or certificate. Additionally, there is a way to securely transfer server-generated keys (HMAC/RSA/ECC) to a TPM of a device. The in-transit encrypted key blobs can be associated with an EK, and as a result, the blobs can only be imported to a TPM that holds the specified EK. Depending on the application, these keys can be used for various purposes, such as data encryption/decryption and digital signing.
 
