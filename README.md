@@ -20,12 +20,12 @@ There are two options for TPM usage: using an actual TPM or a simulated TPM.
 <ins>Option 1:</ins><br>To use an actual TPM, you will need the following hardware:
 - You can use either of the following TPM2.0 boards:
     - [IRIDIUM9670 TPM2.0 board](https://www.infineon.com/cms/en/product/evaluation-boards/iridium9670-tpm2.0-linux/)\
-      <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/IRIDIUM9670-TPM2.png" width="15%">
+      <img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/IRIDIUM9670-TPM2.png" width="15%">
     - [OPTIGA™ TPM SLB 9672 RPI evaluation board](https://www.infineon.com/cms/en/product/evaluation-boards/optiga-tpm-9672-rpi-eval/)\
-      <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/SLB9672-EVA-BOARD.png" width="20%">
+      <img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/SLB9672-EVA-BOARD.png" width="20%">
 - A [Raspberry Pi 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) with TPM mounted.\
-  <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/raspberry-with-slb9670.png" width="30%">
-  <img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/raspberry-with-slb9672.png" width="30%">
+  <img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/raspberry-with-slb9670.png" width="30%">
+  <img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/raspberry-with-slb9672.png" width="30%">
 
 <ins>Option 2:</ins><br>For a simulated TPM, you can use any host machine with one of the following Linux distributions installed: Debian (Bullseye, Buster), Ubuntu (18.04, 20.04).
 
@@ -142,7 +142,7 @@ $ sudo ldconfig
 
 Download the project:
 ```
-$ git clone https://github.com/wxleong/ek-based-onboarding-optiga-tpm ~/ek-based-onboarding-optiga-tpm
+$ git clone https://github.com/infineon/ek-based-onboarding-optiga-tpm ~/ek-based-onboarding-optiga-tpm
 ```
 
 # Operation Guide
@@ -230,17 +230,17 @@ Screenshots:
 <table>
 <tr>
   <td><pre><i>Screenshot-1</i></pre></td>
-  <td><a id="screenshot-1"><img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/dashboard-login.png" width="50%"></td>
+  <td><a id="screenshot-1"><img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/dashboard-login.png" width="50%"></td>
 </tr>
 <tr></tr>
 <tr>
   <td><pre><i>Screenshot-2</i></pre></td>
-  <td><a id="screenshot-2"><img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/dashboard-1.png" width="50%"></td>
+  <td><a id="screenshot-2"><img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/dashboard-1.png" width="50%"></td>
 </tr>
 <tr></tr>
 <tr>
   <td><pre><i>Screenshot-3</i></pre></td>
-  <td><a id="screenshot-3"><img src="https://github.com/wxleong/ek-based-onboarding-optiga-tpm/raw/develop-rework/media/dashboard-2.png" width="50%"></td>
+  <td><a id="screenshot-3"><img src="https://github.com/infineon/ek-based-onboarding-optiga-tpm/raw/master/media/dashboard-2.png" width="50%"></td>
 </tr>
 </table>
 
