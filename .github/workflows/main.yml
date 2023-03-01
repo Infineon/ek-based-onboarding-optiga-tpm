@@ -4,47 +4,56 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '0 0 1,9,16,23 * *'
+    - cron: '0 0 * * MON'
 jobs:
   test:
-    name: Testing
+    name: 'Testing'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        docker_image: ["debian-buster", "debian-bullseye", "ubuntu-18.04", "ubuntu-20.04", "ubuntu-22.04"]
+        docker_image: ['debian-buster', 'debian-bullseye', 'ubuntu-18.04', 'ubuntu-20.04', 'ubuntu-22.04']
     steps:
-      - name: Check out repository
+      - name: 'Checkout Repository'
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Testing README.md instructions
+      - name: 'Dependency Review'
+        uses: actions/dependency-review-action@v3.0.3
+        continue-on-error: true
+        with:
+          head-ref: ${{ github.ref }}
+          base-ref: ec53ee4956ff702efdf1f7a06c87fdfe821dff0f
+          comment-summary-in-pr: true
+          fail-on-severity: low
+          allow-licenses: MIT, BSD-2-Clause, BSD-3-Clause, Apache-1.1, Apache-2.0
+      - name: 'Test README.md Instructions'
         env:
           PROJECT_NAME: ${{ github.event.repository.name }}
           DOCKER_IMAGE: ${{ matrix.docker_image }}
         run: |
           .github/docker/launcher.sh
         shell: bash
-      - name: Upload artifacts
+      - name: 'Upload Artifacts'
         uses: actions/upload-artifact@v3
         with:
-          name: executed-test-scripts
+          name: 'executed-test-scripts'
           path: |
             ~/${{ github.event.repository.name }}_${{ matrix.docker_image }}/${{ github.event.repository.name }}_${{ matrix.docker_image }}.sh
   release:
-    name: Create Release
+    name: 'Create Release'
     needs: test
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: 'Checkout Repository'
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Changelog Pruning
+      - name: 'Changelog Pruning'
         run: |
           sed -n `awk '/## \[${{ github.ref_name }}/{c++} c==1{ print NR; exit }' CHANGELOG.md`',$p' CHANGELOG.md > .CHANGELOG.md.tmp
           sed `awk '/## \[[x0-9]/{c++} c==2{ print NR; exit }' .CHANGELOG.md.tmp`',$d' .CHANGELOG.md.tmp > ${{ github.workspace }}-CHANGELOG.txt
-      - name: Create release
+      - name: 'Create Release'
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ github.workspace }}-CHANGELOG.txt
