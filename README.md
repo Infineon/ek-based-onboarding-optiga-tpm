@@ -118,7 +118,7 @@ $ sudo make install
 $ sudo ldconfig
 ```
 
-Install libtpms-based TPM emulator on Ubuntu-22.04:
+Install libtpms-based TPM simulator:
 ```all
 # Install dependencies
 $ sudo apt-get install -y dh-autoreconf libtasn1-6-dev net-tools libgnutls28-dev expect gawk socat libfuse-dev libseccomp-dev make libjson-glib-dev gnutls-bin
@@ -132,7 +132,7 @@ $ make -j$(nproc)
 $ sudo make install
 $ sudo ldconfig
 
-# Install Libtpms-based TPM emulator
+# Install Libtpms-based TPM simulator
 $ git clone https://github.com/stefanberger/swtpm ~/swtpm
 $ cd ~/swtpm
 $ git checkout v0.7.3
@@ -153,9 +153,9 @@ $ git clone https://github.com/infineon/ek-based-onboarding-optiga-tpm ~/ek-base
 
 If you don't plan to use TPM simulator, you may skip this section.
 
-Start Libtpms-based TPM emulator:
+Start Libtpms-based TPM simulator:
 ```all
-$ mkdir /tmp/emulated_tpm
+$ mkdir /tmp/simulated_tpm
 
 # Create configuration files for swtpm_setup:
 # - ~/.config/swtpm_setup.conf
@@ -166,10 +166,10 @@ $ mkdir /tmp/emulated_tpm
 $ swtpm_setup --tpm2 --create-config-files overwrite,root
 
 # Initialize the swtpm
-$ swtpm_setup --tpm2 --config ~/.config/swtpm_setup.conf --tpm-state /tmp/emulated_tpm --overwrite --create-ek-cert --create-platform-cert --write-ek-cert-files /tmp/emulated_tpm
+$ swtpm_setup --tpm2 --config ~/.config/swtpm_setup.conf --tpm-state /tmp/simulated_tpm --overwrite --create-ek-cert --create-platform-cert --write-ek-cert-files /tmp/simulated_tpm
 
 # Launch the swtpm
-$ swtpm socket --tpm2 --flags not-need-init --tpmstate dir=/tmp/emulated_tpm --server type=tcp,port=2321 --ctrl type=tcp,port=2322 &   <--- to debug, add "--log level=?"
+$ swtpm socket --tpm2 --flags not-need-init --tpmstate dir=/tmp/simulated_tpm --server type=tcp,port=2321 --ctrl type=tcp,port=2322 &   <--- to debug, add "--log level=?"
 $ sleep 5
 ```
 
